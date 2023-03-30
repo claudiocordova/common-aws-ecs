@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Metadata:
+    Generator: "Claudio Cordova"
+Description: "The template used to create an ECS Service from the ECS Console."
+#Parameters:
+  #ECSClusterName:
+  #  Type: String
+    #Default: aws-fargate-cluster
+  #  Default: !ImportValue ECSClusterFargateName
+  #SecurityGroupName:
+  #  Type: CommaDelimitedList
+  #  Default: poker-analyzer-service-sg
+  #SubnetIDs:
+  #  Type: CommaDelimitedList
+    #Type: String
+    #Default: 'subnet-08a1038c794770d81,subnet-05cfebbf1f0f35479'
+  #  Default: !Join [ "", [ !Split [",", !ImportValue DeploymentSubnetIds]] ]   
+   #Default: !Join [ "", [ !ImportValue DeploymentSubnetIds ] ]
+  #VpcID:
+  #  Type: String
+    #Default: vpc-05d652f2c36419caf
+   # Default: !ImportValue DeploymentVpcId 
+  #LoadBalancerName:
+  #  Type: String
+  #  Default: ''
+Resources:
+  ECSService:
+    Type: 'AWS::ECS::Service'
+    Properties:
+      Cluster: !ImportValue ECSClusterFargateName
+      #TaskDefinition: >-
+      #  arn:aws:ecs:us-east-1:361494667617:task-definition/pokerhandanalyzerapi:4
+      TaskDefinition: !ImportValue PokerAnalyzerTaskDefinitionArn
+      LaunchType: FARGATE
+      ServiceName: poker-analyzer-service
+      SchedulingStrategy: REPLICA
+      DesiredCount: 1
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - !Ref SecurityGroup
+          Subnets: !Split [",", !ImportValue DeploymentSubnetIds]
+      PlatformVersion: LATEST
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+        DeploymentCircuitBreaker:
+          Enable: true
+          Rollback: true
+      DeploymentController:
+        Type: ECS
+      ServiceConnectConfiguration:
+        Enabled: false
+      Tags: []
+      EnableECSManagedTags: true
+  SecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: poker-analyzer-service-sg
+      GroupName: poker-analyzer-service-sg
+      VpcId: !ImportValue DeploymentVpcId 
+      SecurityGroupIngress:
+        - FromPort: 80
+          ToPort: 80
+          IpProtocol: TCP
+          CidrIp: 0.0.0.0/0
+        - FromPort: 80
+          ToPort: 80
+          IpProtocol: TCP
+          CidrIpv6: '::/0'
+        - FromPort: 8080
+          ToPort: 8080
+          IpProtocol: TCP
+          CidrIp: 0.0.0.0/0          
+Outputs:
+  ECSService:
+    Description: The created service.
+    Value: !Ref ECSService
+
