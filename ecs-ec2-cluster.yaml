@@ -103,8 +103,4 @@ Outputs:
     Value: !Ref ECSClusterName
     Export:          
       Name: ECSClusterName
-  AutoScalingGroupArn:
-    Description: ASG.
-    Value: !Ref ECSClusterName
-    Export:          
-      Name: ECSClusterName      
+  
