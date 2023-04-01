@@ -23,7 +23,7 @@ Resources:
   ECSService:
     Type: 'AWS::ECS::Service'
     Properties:
-      Cluster: !ImportValue ECSClusterFargateName
+      Cluster: !ImportValue ECSClusterName
       #TaskDefinition: !Sub "arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:task-definition/pokerhandanalyzerapi:4"
       TaskDefinition: !ImportValue PokerAnalyzerTaskDefinitionArn
       LaunchType: FARGATE
@@ -114,7 +114,7 @@ Resources:
       MinCapacity: '2'
       ResourceId: !Sub 
         - "service/${VariableToImport}/poker-analyzer-service"
-        - VariableToImport: !ImportValue ECSClusterFargateName
+        - VariableToImport: !ImportValue ECSClusterName
       RoleARN: !Sub "arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService"
       ScalableDimension: 'ecs:service:DesiredCount'
       ServiceNamespace: ecs
@@ -127,7 +127,7 @@ Resources:
       PolicyType: TargetTrackingScaling
       ResourceId: !Sub 
         - "service/${VariableToImport}/poker-analyzer-service"
-        - VariableToImport: !ImportValue ECSClusterFargateName
+        - VariableToImport: !ImportValue ECSClusterName
       ScalingTargetId: !Ref AutoScalingTarget
       TargetTrackingScalingPolicyConfiguration:
         DisableScaleIn: false

@@ -1,0 +1,110 @@
+AWSTemplateFormatVersion: 2010-09-09
+Metadata:
+    Generator: "Claudio Cordova"
+Description: The template used to create an ECS Cluster from the ECS Console.
+Parameters:
+  ECSClusterName:
+    Type: String
+    Description: >-
+      Specifies the ECS Cluster Name with which the resources would be
+      associated
+    Default: ecs-ec2-cluster
+Resources:
+  ECSCluster:
+    Type: "AWS::ECS::Cluster"
+    Properties:
+      ClusterName: !Ref ECSClusterName
+      CapacityProviders: 
+        - !Ref ECSCapacityProvider
+      ClusterSettings:
+        - Name: containerInsights
+          Value: disabled              
+
+  ECSCapacityProvider:
+    Type: "AWS::ECS::CapacityProvider"
+    Properties:
+      Name: "ec2-capacity-provider"
+      AutoScalingGroupProvider: 
+        AutoScalingGroupArn: !Ref ECSInstanceAsg
+        ManagedTerminationProtection: "DISABLED"
+        ManagedScaling: 
+          MaximumScalingStepSize: 10000
+          MinimumScalingStepSize: 1
+          Status: "ENABLED"
+          TargetCapacity: 100
+
+  EC2SecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: "lc-ecs-ec2-cluster-sg"
+      GroupName: "lc-ecs-ec2-cluster-sg"
+      VpcId: !ImportValue DeploymentVpcId 
+      SecurityGroupIngress: 
+        - 
+          CidrIp: "0.0.0.0/0"
+          FromPort: 80
+          IpProtocol: "tcp"
+          ToPort: 80
+        - 
+          CidrIp: "0.0.0.0/0"
+          FromPort: 8080
+          IpProtocol: "tcp"
+          ToPort: 8080
+      SecurityGroupEgress: 
+        - 
+          CidrIp: "0.0.0.0/0"
+          IpProtocol: "-1"
+
+  ECSInstanceLc:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      LaunchConfigurationName: "ecs-ec2-cluster-EcsInstanceLc"
+      AssociatePublicIpAddress: true    
+      ImageId: ami-0c76be34ffbfb0b14
+      InstanceType: t2.micro
+      InstanceMonitoring: true
+      EbsOptimized: false            
+      #AssociatePublicIpAddress: !If [ IsInheritPublicIp, !Ref "AWS::NoValue", !Ref AutoAssignPublicIp ]
+      IamInstanceProfile: !Sub "arn:aws:iam::${AWS::AccountId}:instance-profile/ecsInstanceRole"
+      KeyName: !Ref 'AWS::NoValue'
+      SecurityGroups: 
+        - !Ref EC2SecurityGroup
+      BlockDeviceMappings:
+        - 
+          DeviceName: "/dev/xvda"
+          Ebs:
+              VolumeSize: 30
+              VolumeType: "gp2"
+      UserData:       
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          echo ECS_CLUSTER=${ECSClusterName} >> /etc/ecs/ecs.config
+          echo ECS_BACKEND_HOST= >> /etc/ecs/ecs.config
+   
+#Fn::Base64: "#!/bin/bash echo ECS_CLUSTER=ecs-ec2-cluster >> /etc/ecs/ecs.config;echo ECS_BACKEND_HOST= >> /etc/ecs/ecs.config;"
+
+  ECSInstanceAsg:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier: !Split [",", !ImportValue DeploymentSubnetIds]
+      LaunchConfigurationName: !Ref ECSInstanceLc
+      MinSize: '0'
+      MaxSize: 2
+      DesiredCapacity: 2
+
+
+
+Outputs:
+  ECSCluster:
+    Description: The created cluster.
+    Value: !Ref ECSCluster
+  ECSClusterName:
+    Description: The created cluster name.
+    Value: !Ref ECSClusterName
+    Export:          
+      Name: ECSClusterName
+  AutoScalingGroupArn:
+    Description: ASG.
+    Value: !Ref ECSClusterName
+    Export:          
+      Name: ECSClusterName      

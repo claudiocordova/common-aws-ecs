@@ -27,7 +27,7 @@ Resources:
   ECSService:
     Type: 'AWS::ECS::Service'
     Properties:
-      Cluster: !ImportValue ECSClusterFargateName
+      Cluster: !ImportValue ECSClusterName
       #TaskDefinition: >-
       #  arn:aws:ecs:us-east-1:361494667617:task-definition/pokerhandanalyzerapi:4
       TaskDefinition: !ImportValue PokerAnalyzerTaskDefinitionArn

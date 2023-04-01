@@ -8,7 +8,7 @@ Parameters:
     Description: >-
       Specifies the ECS Cluster Name with which the resources would be
       associated
-    Default: ecs-cluster-fargate
+    Default: ecs-fargate-cluster
   VpcId:
     Type: String
     Description: >-
@@ -50,4 +50,4 @@ Outputs:
     Description: The created cluster name.
     Value: !Ref ECSClusterName
     Export:          
-      Name: ECSClusterFargateName
+      Name: ECSClusterName

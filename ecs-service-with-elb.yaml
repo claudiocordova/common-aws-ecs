@@ -22,7 +22,7 @@ Resources:
   ECSService:
     Type: 'AWS::ECS::Service'
     Properties:
-      Cluster: !ImportValue ECSClusterFargateName
+      Cluster: !ImportValue ECSClusterName
       TaskDefinition: !ImportValue PokerAnalyzerTaskDefinitionArn
       LaunchType: FARGATE
       ServiceName: poker-analyzer-service

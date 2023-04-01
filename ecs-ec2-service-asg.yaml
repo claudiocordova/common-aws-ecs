@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Metadata:
+    Generator: "Claudio Cordova"
+Description: ""
+Resources:
+    ECSService:
+        Type: "AWS::ECS::Service"
+        Properties:
+            ServiceName: poker-analyzer-service
+            Cluster: !ImportValue ECSClusterName
+            DesiredCount: 1
+            LaunchType: "EC2"
+            TaskDefinition: !ImportValue PokerAnalyzerTaskDefinitionArn
+            DeploymentConfiguration: 
+                MaximumPercent: 200
+                MinimumHealthyPercent: 100
+                DeploymentCircuitBreaker: 
+                    Enable: false
+                    Rollback: false
+            PlacementStrategies: 
+              - 
+                Type: "spread"
+                Field: "attribute:ecs.availability-zone"
+              - 
+                Type: "spread"
+                Field: "instanceId"
+            SchedulingStrategy: "REPLICA"
+            DeploymentController: 
+                Type: "ECS"
+Outputs:
+  ECSService:
+    Description: The created service.
+    Value: !Ref ECSService                
+
