@@ -16,14 +16,14 @@ aws cloudformation create-stack --region $REGION --stack-name ecs-vpc-stack --te
 aws cloudformation wait stack-create-complete --region $REGION --stack-name ecs-vpc-stack
 
 if [ "$MODE" == "FARGATE" ]; then
-  aws cloudformation create-stack --region $REGION  --stack-name ecs-cluster-stack --template-body file://./ecs-cluster.yaml --capabilities CAPABILITY_IAM
+  aws cloudformation create-stack --region $REGION  --stack-name ecs-cluster-stack --template-body file://./ecs-fargate-cluster.yaml --capabilities CAPABILITY_IAM
 elif [ "$MODE" == "EC2" ]; then
   aws cloudformation create-stack --region $REGION  --stack-name ecs-cluster-stack --template-body file://./ecs-ec2-cluster.yaml --capabilities CAPABILITY_IAM
 fi
 aws cloudformation wait stack-create-complete --region $REGION --stack-name ecs-cluster-stack
 
 if [ "$MODE" == "FARGATE" ]; then
-  aws cloudformation create-stack --region $REGION  --stack-name ecs-service-stack --template-body file://./ecs-service.yaml --capabilities CAPABILITY_IAM
+  aws cloudformation create-stack --region $REGION  --stack-name ecs-service-stack --template-body file://./ecs-fargate-service-elb-aas.yaml --capabilities CAPABILITY_IAM
 elif [ "$MODE" == "EC2" ]; then
   aws cloudformation create-stack --region $REGION  --stack-name ecs-service-stack --template-body file://./ecs-ec2-service-elb-asg.yaml --capabilities CAPABILITY_IAM
 fi
