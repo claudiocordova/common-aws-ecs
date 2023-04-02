@@ -1,3 +1,5 @@
+#!/bin/bash
+
 REGION=$(aws configure get region)
 
 if [ -z "$1" ]; then
@@ -12,20 +14,47 @@ else
 fi
 
 
-aws cloudformation create-stack --region $REGION --stack-name ecs-vpc-stack --template-body file://./ecs-vpc.yaml --capabilities CAPABILITY_IAM
-aws cloudformation wait stack-create-complete --region $REGION --stack-name ecs-vpc-stack
+#aws cloudformation create-stack --region $REGION --stack-name ecs-vpc-stack --template-body file://./ecs-vpc.yaml --capabilities CAPABILITY_IAM
+#aws cloudformation wait stack-create-complete --region $REGION --stack-name ecs-vpc-stack
 
 if [ "$MODE" == "FARGATE" ]; then
   aws cloudformation create-stack --region $REGION  --stack-name ecs-cluster-stack --template-body file://./ecs-fargate-cluster.yaml --capabilities CAPABILITY_IAM
+  result=$?
 elif [ "$MODE" == "EC2" ]; then
   aws cloudformation create-stack --region $REGION  --stack-name ecs-cluster-stack --template-body file://./ecs-ec2-cluster.yaml --capabilities CAPABILITY_IAM
+  result=$?
 fi
+
+
+
+if [ $result -eq 254 ] || [ $result -eq 255 ]; then
+  echo "ecs-cluster-stack already exists"
+  #exit 0
+elif [ $result -ne 0 ]; then
+  echo "ecs-cluster-stack failed to create " $result
+  exit 1
+fi
+
 aws cloudformation wait stack-create-complete --region $REGION --stack-name ecs-cluster-stack
 
 if [ "$MODE" == "FARGATE" ]; then
   aws cloudformation create-stack --region $REGION  --stack-name ecs-service-stack --template-body file://./ecs-fargate-service-elb-aas.yaml --capabilities CAPABILITY_IAM
+  result=$? 
 elif [ "$MODE" == "EC2" ]; then
   aws cloudformation create-stack --region $REGION  --stack-name ecs-service-stack --template-body file://./ecs-ec2-service-elb-asg.yaml --capabilities CAPABILITY_IAM
+  result=$?
 fi
+
+
+
+if [ $result -eq 254 ] || [ $result -eq 255 ]; then
+  echo "ecs-service-stack already exists"
+  #exit 0
+elif [ $result -ne 0 ]; then
+  echo "ecs-service-stack failed to create " $result
+  exit 1
+fi
+
+
 
 aws cloudformation wait stack-create-complete --region $REGION --stack-name ecs-service-stack

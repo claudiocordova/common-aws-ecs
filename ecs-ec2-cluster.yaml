@@ -23,7 +23,7 @@ Resources:
 
   ECSCapacityProvider:
     Type: "AWS::ECS::CapacityProvider"
-    #DependsOn: ECSInstanceAsg
+    DependsOn: ECSInstanceAsg
     Properties:
       Name: "ec2-capacity-provider"
       AutoScalingGroupProvider: 
